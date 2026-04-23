@@ -1,0 +1,1214 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<title>Garde Method</title>
+<link href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@700;800;900&family=Barlow:wght@400;500;600&display=swap" rel="stylesheet"/>
+<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-auth-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore-compat.js"></script>
+<style>
+*{box-sizing:border-box;margin:0;padding:0}
+body{background:#080808;color:#f0f0f0;font-family:'Barlow',sans-serif;-webkit-font-smoothing:antialiased}
+.page{display:none;max-width:430px;margin:0 auto;min-height:100vh;flex-direction:column}
+.page.active{display:flex}
+/* LOGIN */
+.login-wrap{flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;padding:32px 24px}
+.login-logo{font-family:'Barlow Condensed',sans-serif;font-weight:900;font-size:34px;letter-spacing:5px;text-transform:uppercase;margin-bottom:6px}
+.login-logo span{color:#FF4D00}
+.login-sub{font-size:12px;color:#555;margin-bottom:40px;letter-spacing:2px;text-transform:uppercase}
+.login-card{width:100%;background:#111;border-radius:16px;padding:28px 20px;border:1px solid #1e1e1e}
+.login-title{font-family:'Barlow Condensed',sans-serif;font-weight:900;font-size:22px;text-transform:uppercase;letter-spacing:2px;margin-bottom:20px}
+.flbl{font-size:10px;color:#555;font-weight:700;letter-spacing:1.5px;text-transform:uppercase;margin-bottom:5px;display:block}
+.inp{width:100%;background:#1a1a1a;border:1px solid #1e1e1e;border-radius:10px;padding:13px 14px;color:#f0f0f0;font-family:'Barlow',sans-serif;font-size:14px;outline:none;margin-bottom:12px;transition:border-color .2s;-webkit-appearance:none}
+.inp:focus{border-color:#FF4D00}
+.err{font-size:12px;color:#FF4D00;margin-bottom:10px;text-align:center;min-height:18px}
+.btn-fire{width:100%;padding:15px;border-radius:12px;border:none;background:#FF4D00;color:#fff;font-family:'Barlow Condensed',sans-serif;font-weight:800;font-size:16px;letter-spacing:2px;text-transform:uppercase;cursor:pointer}
+.btn-dark{width:100%;padding:15px;border-radius:12px;border:1px solid #1e1e1e;background:#1a1a1a;color:#555;font-family:'Barlow Condensed',sans-serif;font-weight:800;font-size:16px;letter-spacing:2px;text-transform:uppercase;cursor:pointer;margin-top:8px}
+/* HEADER */
+.hdr{padding:16px 20px 12px;display:flex;align-items:center;justify-content:space-between;border-bottom:1px solid #1e1e1e}
+.logo{font-family:'Barlow Condensed',sans-serif;font-weight:900;font-size:20px;letter-spacing:4px;text-transform:uppercase}
+.logo span{color:#FF4D00}
+.role-tag{font-family:'Barlow Condensed',sans-serif;font-weight:700;font-size:10px;letter-spacing:2px;padding:5px 12px;background:#FF4D00;color:#fff;text-transform:uppercase;border-radius:2px;cursor:pointer;border:none}
+/* SCROLL */
+.scroll{flex:1;overflow-y:auto;padding:18px 20px 90px}
+/* NAV */
+.nav{display:flex;background:#111;border-top:1px solid #1e1e1e;padding:8px 0 6px;position:sticky;bottom:0}
+.nb{flex:1;display:flex;flex-direction:column;align-items:center;gap:3px;border:none;background:transparent;color:#444;cursor:pointer;padding:6px;font-family:'Barlow',sans-serif}
+.nb.on{color:#FF4D00}
+.nb svg{width:20px;height:20px}
+.nb span{font-size:9px;font-weight:600;letter-spacing:1px;text-transform:uppercase}
+/* CARDS */
+.card{background:#111;border-radius:14px;padding:16px;margin-bottom:8px;border:1px solid #1e1e1e;cursor:pointer}
+.card:active{border-color:#FF4D00}
+.card-row{display:flex;align-items:center;gap:12px}
+.av{width:48px;height:48px;border-radius:12px;display:flex;align-items:center;justify-content:center;font-family:'Barlow Condensed',sans-serif;font-weight:900;font-size:15px;color:#fff;flex-shrink:0}
+.cname{font-family:'Barlow Condensed',sans-serif;font-weight:800;font-size:18px;text-transform:uppercase}
+.cmeta{font-size:12px;color:#555;margin-top:2px}
+.cright{text-align:right;flex-shrink:0}
+.cpct{font-family:'Barlow Condensed',sans-serif;font-weight:900;font-size:22px;color:#FF4D00}
+.cpct-lbl{font-size:10px;color:#555}
+.pbar{height:2px;background:#1e1e1e;border-radius:1px;margin-top:10px;overflow:hidden}
+.pfill{height:100%;background:#FF4D00;border-radius:1px}
+/* HERO STATS */
+.hero-stats{display:grid;grid-template-columns:1fr 1fr;gap:2px;border-radius:14px;overflow:hidden;margin-bottom:20px}
+.hcell{background:#111;padding:18px}
+.hnum{font-family:'Barlow Condensed',sans-serif;font-weight:900;font-size:40px;line-height:1}
+.hlbl{font-size:11px;color:#555;margin-top:3px}
+/* BIG TITLE */
+.btitle{font-family:'Barlow Condensed',sans-serif;font-weight:900;font-size:34px;text-transform:uppercase;line-height:1;margin-bottom:4px}
+.slbl{font-family:'Barlow Condensed',sans-serif;font-weight:700;font-size:10px;letter-spacing:3px;text-transform:uppercase;color:#555;margin-bottom:12px}
+/* PROFILE */
+.profile-box{background:#111;border-radius:14px;padding:20px;margin-bottom:14px;border:1px solid #1e1e1e}
+.ptop{display:flex;align-items:center;gap:14px;margin-bottom:18px}
+.pav{width:60px;height:60px;border-radius:12px;display:flex;align-items:center;justify-content:center;font-family:'Barlow Condensed',sans-serif;font-weight:900;font-size:20px;color:#fff;flex-shrink:0}
+.pname{font-family:'Barlow Condensed',sans-serif;font-weight:900;font-size:26px;text-transform:uppercase;line-height:1}
+.psub{font-size:12px;color:#555;margin-top:3px}
+.pstats{display:grid;grid-template-columns:1fr 1fr 1fr;gap:10px}
+.psnum{font-family:'Barlow Condensed',sans-serif;font-weight:900;font-size:26px}
+.pslbl{font-size:10px;color:#555}
+/* ROUTINE */
+.rc{background:#111;border-radius:14px;margin-bottom:8px;border:1px solid #1e1e1e;overflow:hidden}
+.rc.open{border-color:#FF4D00}
+.rc-head{padding:14px 16px;cursor:pointer;display:flex;align-items:center;gap:10px}
+.dpill{font-family:'Barlow Condensed',sans-serif;font-weight:700;font-size:9px;letter-spacing:2px;text-transform:uppercase;padding:4px 9px;background:#FF4D00;color:#fff;border-radius:3px;flex-shrink:0}
+.rname{font-family:'Barlow Condensed',sans-serif;font-weight:800;font-size:16px;text-transform:uppercase}
+.rcount{font-size:11px;color:#555;margin-top:1px}
+.rarr{color:#555;font-size:18px;transition:transform .25s;line-height:1}
+.rarr.open{transform:rotate(90deg);color:#FF4D00}
+.rbody{border-top:1px solid #1e1e1e;max-height:0;overflow:hidden;transition:max-height .3s ease}
+.rbody.open{max-height:3000px}
+.ex-row{display:flex;align-items:center;gap:10px;padding:10px 16px;border-bottom:1px solid #1e1e1e}
+.ex-row:last-child{border-bottom:none}
+.exn{font-family:'Barlow Condensed',sans-serif;font-weight:700;font-size:11px;color:#444;width:18px;flex-shrink:0}
+.exname{font-size:13px;font-weight:500;flex:1}
+.exnote{font-size:10px;color:#555;margin-top:2px}
+.exbadge{font-family:'Barlow Condensed',sans-serif;font-weight:900;font-size:18px;color:#FF4D00;flex-shrink:0}
+/* CHIP */
+.chip-group{display:flex;flex-wrap:wrap;gap:6px;margin-bottom:14px}
+.chip{padding:6px 12px;border-radius:4px;font-size:12px;font-weight:600;cursor:pointer;border:1px solid #1e1e1e;background:#1a1a1a;color:#555;transition:all .15s;-webkit-tap-highlight-color:transparent}
+.chip.on{background:#FF4D00;color:#fff;border-color:#FF4D00}
+/* MODAL */
+.modal-bg{display:none;position:fixed;inset:0;background:rgba(0,0,0,.85);z-index:300;align-items:flex-end}
+.modal-bg.open{display:flex}
+.modal{background:#111;border-radius:20px 20px 0 0;padding:24px 20px 32px;width:100%;max-height:88vh;overflow-y:auto;border-top:1px solid #1e1e1e}
+.modal-title{font-family:'Barlow Condensed',sans-serif;font-weight:900;font-size:24px;letter-spacing:2px;text-transform:uppercase;margin-bottom:18px}
+.inp-row{display:flex;gap:8px}
+.inp-row .inp{flex:1}
+.ex-block{background:#1a1a1a;border-radius:10px;padding:12px;margin-bottom:8px;border:1px solid #1e1e1e;position:relative}
+.del-ex{position:absolute;top:8px;right:8px;background:none;border:none;color:#444;cursor:pointer;font-size:15px;padding:2px 5px}
+/* ATTENDANCE */
+.att-row{background:#111;border-radius:14px;padding:16px;margin-bottom:8px;border:1px solid #1e1e1e;display:flex;align-items:center;gap:12px}
+.att-btn{background:#1a1a1a;border:1px solid #1e1e1e;border-radius:10px;padding:10px 14px;font-size:20px;cursor:pointer;flex-shrink:0}
+.att-btn:active{background:#FF4D00;border-color:#FF4D00}
+/* BACK */
+.back-btn{display:flex;align-items:center;gap:6px;background:none;border:none;color:#555;cursor:pointer;font-family:'Barlow',sans-serif;font-size:12px;font-weight:600;letter-spacing:1px;text-transform:uppercase;padding:0;margin-bottom:18px}
+/* COLORS */
+.color-row{display:flex;gap:8px;flex-wrap:wrap;margin-bottom:14px}
+.cdot{width:30px;height:30px;border-radius:8px;cursor:pointer;border:2px solid transparent}
+.cdot.sel{border-color:#fff;transform:scale(1.1)}
+/* CHART */
+.chart-box{background:#1a1a1a;border-radius:12px;padding:14px;margin-bottom:14px}
+.chart-lbl{font-size:10px;color:#555;letter-spacing:1px;text-transform:uppercase;font-weight:600;margin-bottom:12px}
+.chart-bars{display:flex;align-items:flex-end;gap:5px;height:60px}
+.cbw{flex:1;display:flex;flex-direction:column;align-items:center;gap:4px}
+.cb{width:100%;background:#2a2a2a;border-radius:2px 2px 0 0;min-height:3px}
+.cb.last{background:#FF4D00}
+.cbl{font-size:9px;color:#555}
+/* HIST */
+.hist-row{display:flex;justify-content:space-between;align-items:center;padding:10px 0;border-bottom:1px solid #1e1e1e}
+.hist-row:last-child{border-bottom:none}
+.hdate{font-size:12px;color:#555}
+.hnote{font-size:10px;color:#333;margin-top:1px}
+.hw{font-family:'Barlow Condensed',sans-serif;font-weight:800;font-size:20px}
+/* DIVIDER */
+.divider{height:1px;background:#1e1e1e;margin:16px 0}
+/* EMPTY */
+.empty{text-align:center;padding:40px 20px;color:#444}
+.empty-icon{font-size:40px;margin-bottom:12px;opacity:.6}
+/* TOAST */
+.toast{display:none;position:fixed;bottom:80px;left:50%;transform:translateX(-50%);background:#FF4D00;color:#fff;padding:10px 22px;border-radius:30px;font-family:'Barlow Condensed',sans-serif;font-weight:700;font-size:14px;letter-spacing:1px;z-index:500;white-space:nowrap}
+/* BTN SM */
+.btn-sm{background:#FF4D00;border:none;color:#fff;border-radius:6px;padding:7px 14px;font-family:'Barlow Condensed',sans-serif;font-weight:800;font-size:11px;letter-spacing:1.5px;text-transform:uppercase;cursor:pointer}
+select.inp option{background:#1a1a1a;color:#f0f0f0}
+<script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+</style>
+</head>
+<body>
+
+<!-- TOAST -->
+<div class="toast" id="toast"></div>
+
+<!-- LOGIN PAGE -->
+<div class="page active" id="page-login">
+  <div class="login-wrap">
+    <div class="login-logo"><span>Garde</span> Method</div>
+    <div class="login-sub">Panel del Entrenador</div>
+    <div class="login-card">
+      <div class="login-title">Ingresar</div>
+      <label class="flbl">Email</label>
+      <input class="inp" type="email" id="login-email" placeholder="tu@email.com" autocomplete="email"/>
+      <label class="flbl">Contraseña</label>
+      <input class="inp" type="password" id="login-pass" placeholder="••••••••" autocomplete="current-password"/>
+      <div class="err" id="login-err"></div>
+      <button class="btn-fire" id="login-btn">Ingresar</button>
+    </div>
+  </div>
+</div>
+
+<!-- MAIN APP PAGE -->
+<div class="page" id="page-app">
+  <div class="hdr">
+    <div class="logo"><span>Garde</span> Method</div>
+    <button class="role-tag" id="logout-btn">Salir</button>
+  </div>
+
+  <!-- TAB: HOME -->
+  <div id="tab-home" class="scroll">
+    <div class="btitle">Panel</div>
+    <div style="font-size:13px;color:#555;margin-bottom:18px">Bienvenido de vuelta</div>
+    <div class="hero-stats">
+      <div class="hcell"><div class="hnum" id="stat-students">0</div><div class="hlbl">Alumnos</div></div>
+      <div class="hcell"><div class="hnum" id="stat-att">0</div><div class="hlbl">Asistencias</div></div>
+    </div>
+    <div class="slbl">Alumnos</div>
+    <div id="home-students-list"></div>
+  </div>
+
+  <!-- TAB: STUDENTS -->
+  <div id="tab-students" style="display:none;flex:1;overflow-y:auto;padding:18px 20px 90px">
+    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:18px">
+      <div class="btitle">Alumnos</div>
+      <button class="btn-sm" id="open-add-student">+ Alumno</button>
+    </div>
+    <div id="students-list"></div>
+  </div>
+
+  <!-- TAB: ATTENDANCE -->
+  <div id="tab-attendance" style="display:none;flex:1;overflow-y:auto;padding:18px 20px 90px">
+    <div class="btitle" style="margin-bottom:4px">Asistencia</div>
+    <div style="font-size:13px;color:#555;margin-bottom:18px">Tocá ✓ para registrar hoy</div>
+    <div id="att-list"></div>
+  </div>
+
+  <!-- TAB: STATS removido - estadísticas en Panel -->
+
+  <!-- TAB: BANCO -->
+  <div id="tab-banco" style="display:none;flex:1;overflow-y:auto;padding:18px 20px 90px">
+    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:6px">
+      <div class="btitle">Banco</div>
+      <div style="display:flex;gap:8px">
+        <button class="btn-sm" style="background:#1a1a1a;color:#f0f0f0;border:1px solid #1e1e1e" onclick="exportExcel()">📊 Excel</button>
+        <button class="btn-sm" id="open-add-banco">+ Rutina</button>
+      </div>
+    </div>
+    <div style="font-size:12px;color:#555;margin-bottom:16px">Tus rutinas guardadas. Asignálas a cualquier alumno en un click.</div>
+    <div id="banco-list"></div>
+  </div>
+
+  <!-- TAB: STUDENT DETAIL -->
+  <div id="tab-detail" style="display:none;flex:1;overflow-y:auto;padding:18px 20px 90px">
+    <button class="back-btn" id="back-btn">← Volver</button>
+    <div id="detail-content"></div>
+  </div>
+
+  <nav class="nav" id="main-nav">
+    <button class="nb on" data-tab="home" onclick="switchTab('home')">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M3 9l9-7 9 7v11a2 2 0 01-2 2H5a2 2 0 01-2-2z"/><polyline points="9,22 9,12 15,12 15,22"/></svg>
+      <span>Inicio</span>
+    </button>
+    <button class="nb" data-tab="students" onclick="switchTab('students')">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M17 21v-2a4 4 0 00-4-4H5a4 4 0 00-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 00-3-3.87M16 3.13a4 4 0 010 7.75"/></svg>
+      <span>Alumnos</span>
+    </button>
+    <button class="nb" data-tab="attendance" onclick="switchTab('attendance')">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><polyline points="9,11 12,14 22,4"/><path d="M21 12v7a2 2 0 01-2 2H5a2 2 0 01-2-2V5a2 2 0 012-2h11"/></svg>
+      <span>Asistencia</span>
+    </button>
+    <button class="nb" data-tab="banco" onclick="switchTab('banco')">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M4 19.5A2.5 2.5 0 016.5 17H20"/><path d="M6.5 2H20v20H6.5A2.5 2.5 0 014 19.5v-15A2.5 2.5 0 016.5 2z"/></svg>
+      <span>Banco</span>
+    </button>
+  </nav>
+</div>
+
+<!-- ADD STUDENT MODAL -->
+<div class="modal-bg" id="modal-student">
+  <div class="modal">
+    <div class="modal-title">Nuevo Alumno</div>
+    <label class="flbl">Nombre *</label>
+    <input class="inp" id="ns-name" placeholder="Juan García"/>
+    <div class="inp-row">
+      <div style="flex:1"><label class="flbl">Edad</label><input class="inp" id="ns-age" type="number" placeholder="28" style="margin-bottom:0"/></div>
+      <div style="flex:2"><label class="flbl">Objetivo</label><input class="inp" id="ns-goal" placeholder="Hipertrofia" style="margin-bottom:0"/></div>
+    </div>
+    <div style="margin-top:12px">
+      <label class="flbl">Email del alumno *</label>
+      <input class="inp" id="ns-email" type="email" placeholder="alumno@email.com"/>
+      <label class="flbl">Contraseña inicial *</label>
+      <input class="inp" id="ns-pass" type="text" placeholder="Mínimo 6 caracteres"/>
+    </div>
+    <label class="flbl">Color</label>
+    <div class="color-row" id="color-picker"></div>
+    <button class="btn-fire" id="save-student-btn">Agregar Alumno</button>
+    <button class="btn-dark" onclick="closeModal('modal-student')">Cancelar</button>
+  </div>
+</div>
+
+<!-- ADD ROUTINE MODAL -->
+<div class="modal-bg" id="modal-routine">
+  <div class="modal">
+    <div class="modal-title">Nueva Rutina</div>
+    <label class="flbl">Día</label>
+    <select class="inp" id="nr-day">
+      <option>Lunes</option><option>Martes</option><option>Miércoles</option>
+      <option>Jueves</option><option>Viernes</option><option>Sábado</option><option>Domingo</option>
+    </select>
+    <label class="flbl">Nombre *</label>
+    <input class="inp" id="nr-label" placeholder="Ej: Pecho + Tríceps"/>
+    <label class="flbl">Grupos musculares</label>
+    <div class="chip-group" id="muscle-chips"></div>
+    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:10px">
+      <label class="flbl" style="margin-bottom:0">Ejercicios</label>
+      <button class="btn-sm" onclick="addExerciseRow()">+ Agregar</button>
+    </div>
+    <div id="exercises-container"></div>
+    <div style="display:flex;gap:8px;margin-bottom:8px">
+      <button class="btn-dark" onclick="addExerciseRow()" style="flex:1">+ Ejercicio</button>
+      <button class="btn-dark" onclick="addTabataBlock()" style="flex:1;color:#FF4D00;border-color:#FF4D00">⚡ + Tabata</button>
+    </div>
+    <button class="btn-fire" id="save-routine-btn">Guardar Rutina</button>
+    <button class="btn-dark" onclick="closeModal('modal-routine')">Cancelar</button>
+  </div>
+</div>
+
+<!-- ADD BANCO MODAL -->
+<div class="modal-bg" id="modal-banco">
+  <div class="modal">
+    <div class="modal-title">Nueva Rutina al Banco</div>
+    <label class="flbl">Nombre de la rutina *</label>
+    <input class="inp" id="banco-label" placeholder="Ej: Hipertrofia Pecho Intermedio"/>
+    <label class="flbl">Grupos musculares</label>
+    <div class="chip-group" id="banco-muscle-chips"></div>
+    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:10px">
+      <label class="flbl" style="margin-bottom:0">Ejercicios</label>
+      <button class="btn-sm" onclick="addBancoExRow()">+ Agregar</button>
+    </div>
+    <div id="banco-exercises"></div>
+    <button class="btn-dark" onclick="addBancoExRow()" style="margin-bottom:8px">+ Agregar ejercicio</button>
+    <button class="btn-fire" id="save-banco-btn">Guardar en Banco</button>
+    <button class="btn-dark" onclick="closeModal('modal-banco')">Cancelar</button>
+  </div>
+</div>
+
+<!-- ASIGNAR MODAL -->
+<div class="modal-bg" id="modal-asignar">
+  <div class="modal">
+    <div id="asignar-content"></div>
+  </div>
+</div>
+
+<!-- EDIT STUDENT MODAL -->
+<div class="modal-bg" id="modal-edit-student">
+  <div class="modal">
+    <div class="modal-title">Editar Alumno</div>
+    <label class="flbl">Nombre *</label>
+    <input class="inp" id="es-name" placeholder="Juan García"/>
+    <div class="inp-row">
+      <div style="flex:1"><label class="flbl">Edad</label><input class="inp" id="es-age" type="number" placeholder="28" style="margin-bottom:0"/></div>
+      <div style="flex:2"><label class="flbl">Objetivo</label><input class="inp" id="es-goal" placeholder="Hipertrofia" style="margin-bottom:0"/></div>
+    </div>
+    <div style="margin-top:12px">
+      <label class="flbl">Color</label>
+      <div class="color-row" id="edit-color-picker"></div>
+    </div>
+    <button class="btn-fire" id="save-edit-student-btn">Guardar cambios</button>
+    <button class="btn-dark" onclick="closeModal('modal-edit-student')">Cancelar</button>
+  </div>
+</div>
+
+<!-- EXPORT MODAL -->
+<div class="modal-bg" id="modal-export">
+  <div class="modal" style="max-height:85vh;overflow-y:auto">
+    <div id="export-content"></div>
+  </div>
+</div>
+
+<div class="modal-bg" id="modal-weight">
+  <div class="modal">
+    <div class="modal-title">Registrar Peso</div>
+    <label class="flbl">Peso (kg) *</label>
+    <input class="inp" id="nw-weight" type="number" step=".1" placeholder="78.5"/>
+    <label class="flbl">Nota</label>
+    <input class="inp" id="nw-note" placeholder="Observación (opcional)"/>
+    <button class="btn-fire" id="save-weight-btn">Guardar</button>
+    <button class="btn-dark" onclick="closeModal('modal-weight')">Cancelar</button>
+  </div>
+</div>
+
+<script>
+// ── FIREBASE ──────────────────────────────────────────────────────────────────
+firebase.initializeApp({
+  apiKey: "AIzaSyDURhnrB62ri8vc0NwFBXriZM9duE_WxR4",
+  authDomain: "garde-method.firebaseapp.com",
+  projectId: "garde-method",
+  storageBucket: "garde-method.firebasestorage.app",
+  messagingSenderId: "545565798873",
+  appId: "1:545565798873:web:0c37d53180c7d91ccae9c8"
+});
+const auth = firebase.auth();
+const db = firebase.firestore();
+
+const COLORS = ["#FF4D00","#00C2FF","#00E676","#FFD600","#FF1744","#E040FB","#FF6D00","#00BFA5"];
+const MUSCLES = ["Pecho","Espalda","Hombros","Bíceps","Tríceps","Piernas","Glúteos","Core","Cardio"];
+const MONTHS = ["Ene","Feb","Mar","Abr","May","Jun","Jul","Ago","Sep","Oct","Nov","Dic"];
+
+let students = [];
+let selectedStudentId = null;
+let selectedMuscles = [];
+let selectedColor = COLORS[0];
+let studentRoutinesUnsub = null;
+let studentRoutines = [];
+
+// ── AUTH ──────────────────────────────────────────────────────────────────────
+auth.onAuthStateChanged(user => {
+  if (user) {
+    showPage('page-app');
+    listenStudents();
+    listenBanco();
+  } else {
+    showPage('page-login');
+  }
+});
+
+document.getElementById('login-btn').onclick = async () => {
+  const email = document.getElementById('login-email').value.trim();
+  const pass = document.getElementById('login-pass').value;
+  const errEl = document.getElementById('login-err');
+  errEl.textContent = '';
+  if (!email || !pass) { errEl.textContent = 'Completá email y contraseña'; return; }
+  document.getElementById('login-btn').textContent = 'Ingresando...';
+  try {
+    await auth.signInWithEmailAndPassword(email, pass);
+  } catch(e) {
+    errEl.textContent = e.code === 'auth/wrong-password' || e.code === 'auth/invalid-credential' ? 'Contraseña incorrecta' :
+                        e.code === 'auth/user-not-found' ? 'Email no encontrado' : e.message;
+    document.getElementById('login-btn').textContent = 'Ingresar';
+  }
+};
+
+document.getElementById('login-pass').addEventListener('keydown', e => {
+  if (e.key === 'Enter') document.getElementById('login-btn').click();
+});
+
+document.getElementById('logout-btn').onclick = () => auth.signOut();
+
+// ── STUDENTS ──────────────────────────────────────────────────────────────────
+function listenStudents() {
+  db.collection('students').onSnapshot(snap => {
+    students = snap.docs.map(d => ({ id: d.id, ...d.data() }));
+    renderAll();
+  });
+}
+
+function pct(s) {
+  return s.totalSessions > 0 ? Math.round((s.attendance||0) / s.totalSessions * 100) : 0;
+}
+
+function renderAll() {
+  const total = students.reduce((a,s) => a + (s.attendance||0), 0);
+  document.getElementById('stat-students').textContent = students.length;
+  document.getElementById('stat-att').textContent = total;
+  renderStudentList('home-students-list', true);
+  renderStudentList('students-list', false);
+  renderAttList();
+  renderStatsList();
+}
+
+function studentCard(s, onClick) {
+  const p = pct(s);
+  // Payment status
+  let payDot = '';
+  if (s.paymentDue) {
+    const today = new Date(); today.setHours(0,0,0,0);
+    const due = new Date(s.paymentDue); due.setHours(0,0,0,0);
+    const diff = Math.round((due - today) / (1000*60*60*24));
+    if (diff < 0) payDot = '<span style="color:#FF1744;font-size:10px;font-weight:700"> 🔴</span>';
+    else if (diff <= 3) payDot = '<span style="color:#FFD600;font-size:10px;font-weight:700"> 🟡</span>';
+    else payDot = '<span style="color:#00E676;font-size:10px;font-weight:700"> 🟢</span>';
+  }
+  return `
+    <div class="card" onclick="${onClick}">
+      <div class="card-row">
+        <div class="av" style="background:${s.color||'#FF4D00'}">${s.avatar||'??'}</div>
+        <div style="flex:1">
+          <div class="cname">${s.name}${payDot}</div>
+          <div class="cmeta">${s.goal||''}${s.age ? ' · '+s.age+' años' : ''}</div>
+        </div>
+        <div class="cright">
+          <div class="cpct">${p}%</div>
+          <div class="cpct-lbl">Asistencia</div>
+        </div>
+      </div>
+      <div class="pbar"><div class="pfill" style="width:${p}%"></div></div>
+    </div>`;
+}
+
+function renderStudentList(containerId, homeMode) {
+  const el = document.getElementById(containerId);
+  if (!students.length) { el.innerHTML = '<div class="empty"><div class="empty-icon">👥</div><div style="font-size:14px">Sin alumnos aún</div></div>'; return; }
+  el.innerHTML = students.map(s => studentCard(s, `openDetail('${s.id}')`)).join('');
+}
+
+function renderAttList() {
+  const el = document.getElementById('att-list');
+  el.innerHTML = students.map(s => `
+    <div class="att-row">
+      <div class="av" style="background:${s.color||'#FF4D00'}">${s.avatar||'??'}</div>
+      <div style="flex:1"><div class="cname">${s.name}</div><div class="cmeta">${s.attendance||0} asistencias</div></div>
+      <button class="att-btn" onclick="markAtt('${s.id}')">✓</button>
+    </div>`).join('');
+}
+
+function renderStatsList() {
+  const el = document.getElementById('stats-list');
+  el.innerHTML = students.map(s => {
+    const p = pct(s);
+    return `
+      <div style="background:#111;border-radius:14px;padding:16px;margin-bottom:8px;border:1px solid #1e1e1e">
+        <div style="display:flex;align-items:center;gap:10px;margin-bottom:10px">
+          <div class="av" style="background:${s.color||'#FF4D00'};width:40px;height:40px;font-size:13px">${s.avatar||'??'}</div>
+          <div style="flex:1"><div class="cname" style="font-size:16px">${s.name}</div><div class="cmeta">${s.goal||''}</div></div>
+          <div style="font-family:'Barlow Condensed',sans-serif;font-weight:900;font-size:28px;color:#FF4D00">${p}%</div>
+        </div>
+        <div class="pbar"><div class="pfill" style="width:${p}%"></div></div>
+        <div style="font-size:11px;color:#555;margin-top:10px">${s.attendance||0} asistencias</div>
+        ${renderChart(s.history||[])}
+      </div>`;
+  }).join('');
+}
+
+function renderChart(history) {
+  if (!history || history.length < 2) return '';
+  const ws = history.map(h => h.weight);
+  const mn = Math.min(...ws) - .5, mx = Math.max(...ws) + .5;
+  const norm = w => Math.max(6, ((w-mn)/(mx-mn))*100);
+  const rev = [...history].reverse();
+  return `<div class="chart-box" style="margin-top:10px">
+    <div class="chart-lbl">Evolución de peso — kg</div>
+    <div class="chart-bars">
+      ${rev.map((h,i) => `<div class="cbw"><div class="cb ${i===rev.length-1?'last':''}" style="height:${norm(h.weight)}%"></div><div class="cbl">${h.date.split(' ')[0]}</div></div>`).join('')}
+    </div>
+  </div>`;
+}
+
+// ── DETAIL ────────────────────────────────────────────────────────────────────
+function openDetail(sid) {
+  selectedStudentId = sid;
+  const s = students.find(x => x.id === sid);
+  if (!s) return;
+  if (studentRoutinesUnsub) studentRoutinesUnsub();
+  studentRoutinesUnsub = db.collection('students').doc(sid).collection('routines').onSnapshot(snap => {
+    studentRoutines = snap.docs.map(d => ({ id: d.id, ...d.data() }));
+    renderDetail();
+  });
+  switchTab('detail');
+  renderDetail();
+}
+
+async function archiveWeek() {
+  const s = students.find(x => x.id === selectedStudentId);
+  if (!s) return;
+  const active = studentRoutines.filter(r => r.status !== 'archived');
+  if (active.length === 0) { alert('No hay rutinas activas para archivar'); return; }
+  if (!confirm(`¿Archivar ${active.length} rutina(s) de esta semana? Quedarán guardadas en el historial.`)) return;
+  const d = new Date();
+  const dateStr = `${d.getDate()}/${d.getMonth()+1}/${d.getFullYear()}`;
+  const batch = db.batch();
+  active.forEach(r => {
+    const ref = db.collection('students').doc(selectedStudentId).collection('routines').doc(r.id);
+    batch.update(ref, { status: 'archived', archivedAt: dateStr });
+  });
+  await batch.commit();
+  showToast('Semana archivada — podés cargar la nueva');
+}
+
+function renderDetail() {
+  const s = students.find(x => x.id === selectedStudentId);
+  if (!s) return;
+  const p = pct(s);
+  const history = s.history || [];
+  const activeRoutines = studentRoutines.filter(r => r.status !== 'archived');
+  const archivedRoutines = studentRoutines.filter(r => r.status === 'archived');
+
+  document.getElementById('detail-content').innerHTML = `
+    <div class="profile-box">
+      <div class="ptop">
+        <div class="pav" style="background:${s.color||'#FF4D00'}">${s.avatar||'??'}</div>
+        <div style="flex:1">
+          <div class="pname">${s.name}</div>
+          <div class="psub">${s.age?s.age+' años · ':''}${s.goal||''}</div>
+        </div>
+        <button onclick="openEditStudent('${s.id}')" style="background:none;border:none;color:#FF4D00;font-family:'Barlow Condensed',sans-serif;font-weight:700;font-size:11px;letter-spacing:1px;cursor:pointer;text-transform:uppercase">EDITAR</button>
+      </div>
+      <div class="pstats">
+        <div><div class="psnum">${s.attendance||0}</div><div class="pslbl">Asistencias</div></div>
+        <div><div class="psnum">${p}%</div><div class="pslbl">Asistencia</div></div>
+        <div><div class="psnum">${activeRoutines.length}</div><div class="pslbl">Rutinas activas</div></div>
+      </div>
+      <div class="pbar" style="margin-top:14px"><div class="pfill" style="width:${p}%"></div></div>
+    </div>
+    <button class="btn-fire" style="width:100%;margin-bottom:8px" onclick="markAtt('${s.id}')">Registrar Asistencia Hoy</button>
+    ${renderPaymentBox(s)}
+    <div style="background:#111;border-radius:14px;padding:16px;margin-bottom:14px;border:1px solid #1e1e1e">
+      <div class="slbl" style="margin-bottom:8px">💬 Mensaje al alumno</div>
+      <textarea id="coach-msg-input" placeholder="Escribí un mensaje para ${s.name.split(' ')[0]}..." style="width:100%;background:#1a1a1a;border:1px solid #1e1e1e;border-radius:10px;padding:12px;color:#f0f0f0;font-family:'Barlow',sans-serif;font-size:13px;outline:none;resize:none;height:80px;margin-bottom:8px">${s.coachMessage || ''}</textarea>
+      <div style="display:flex;gap:8px">
+        <button class="btn-sm" style="flex:1" onclick="saveCoachMessage('${s.id}')">Enviar mensaje</button>
+        ${s.coachMessage ? `<button class="btn-sm" style="background:#1a1a1a;color:#555;border:1px solid #1e1e1e" onclick="clearCoachMessage('${s.id}')">Borrar</button>` : ''}
+      </div>
+      ${s.coachMessageAt ? `<div style="font-size:10px;color:#555;margin-top:6px">Enviado: ${s.coachMessageAt}</div>` : ''}
+    </div>
+    ${renderChart(history)}
+    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px">
+      <div class="slbl" style="margin-bottom:0">Historial de peso</div>
+      <button class="btn-sm" onclick="openModal('modal-weight')">+ Peso</button>
+    </div>
+    ${history.length ? `<div style="background:#111;border-radius:14px;padding:0 14px;margin-bottom:16px;border:1px solid #1e1e1e">
+      ${history.slice(0,5).map(h => `<div class="hist-row"><div><div class="hdate">${h.date}</div>${h.note?`<div class="hnote">${h.note}</div>`:''}</div><div class="hw">${h.weight} <span style="font-size:12px;color:#555">kg</span></div></div>`).join('')}
+    </div>` : ''}
+    <div class="divider"></div>
+    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:12px">
+      <div class="slbl" style="margin-bottom:0">Rutinas activas</div>
+      <div style="display:flex;gap:8px">
+        ${activeRoutines.length > 0 ? `<button class="btn-sm" style="background:#1a1a1a;color:#555;border:1px solid #1e1e1e" onclick="archiveWeek()">📦 Archivar semana</button>` : ''}
+        <button class="btn-sm" onclick="editingRoutineId=null;document.querySelector('#modal-routine .modal-title').textContent='Nueva Rutina';document.getElementById('save-routine-btn').textContent='Guardar Rutina';openModal('modal-routine')">+ Rutina</button>
+      </div>
+    </div>
+    ${activeRoutines.length === 0 ? '<div class="empty"><div class="empty-icon">📋</div><div style="font-size:14px">Sin rutinas activas — agregá la nueva semana</div></div>' :
+      activeRoutines.map(r => `
+        <div class="rc" id="rc-${r.id}">
+          <div class="rc-head" onclick="toggleRoutine('${r.id}')">
+            <div class="dpill">${r.day}</div>
+            <div style="flex:1">
+              <div class="rname">${r.label}</div>
+              <div class="rcount">${(r.exercises||[]).length} ejercicios${(r.muscles||[]).length?' · '+r.muscles.join(', '):''}</div>
+            </div>
+            <button onclick="event.stopPropagation();editRoutine('${r.id}')" style="background:none;border:none;color:#FF4D00;font-size:12px;cursor:pointer;padding:2px 6px;font-family:'Barlow Condensed',sans-serif;font-weight:700;letter-spacing:1px">EDITAR</button>
+            <button onclick="event.stopPropagation();delRoutine('${r.id}')" style="background:none;border:none;color:#444;font-size:13px;cursor:pointer;padding:2px 6px">✕</button>
+            <div class="rarr" id="arr-${r.id}">›</div>
+          </div>
+          <div class="rbody" id="rb-${r.id}">
+            ${(r.exercises||[]).map((ex,i) => `
+              <div class="ex-row">
+                <div class="exn">${i+1}</div>
+                <div style="flex:1"><div class="exname">${ex.name}</div>${ex.note?`<div class="exnote">↳ ${ex.note}</div>`:''}</div>
+                <div style="text-align:right"><div class="exbadge">${ex.sets}×${ex.reps}</div><div style="font-size:10px;color:#555">${ex.rest}</div></div>
+              </div>`).join('')}
+          </div>
+        </div>`).join('')}
+    ${archivedRoutines.length > 0 ? `
+    <div class="divider"></div>
+    <div class="slbl" style="margin-bottom:12px">Semanas anteriores (${archivedRoutines.length})</div>
+    ${archivedRoutines.map(r => `
+      <div style="background:#111;border-radius:12px;padding:14px;margin-bottom:8px;border:1px solid #1e1e1e;opacity:.6">
+        <div style="display:flex;align-items:center;gap:10px">
+          <div class="dpill" style="background:#333">${r.day}</div>
+          <div style="flex:1">
+            <div class="rname" style="font-size:15px">${r.label}</div>
+            <div class="rcount">Archivado el ${r.archivedAt||''} · ${(r.exercises||[]).length} ejercicios</div>
+          </div>
+        </div>
+      </div>`).join('')}
+    ` : ''}
+  `;
+}
+
+function toggleRoutine(rid) {
+  const rb = document.getElementById('rb-'+rid);
+  const arr = document.getElementById('arr-'+rid);
+  const rc = document.getElementById('rc-'+rid);
+  rb.classList.toggle('open');
+  arr.classList.toggle('open');
+  rc.classList.toggle('open');
+}
+
+async function delRoutine(rid) {
+  await db.collection('students').doc(selectedStudentId).collection('routines').doc(rid).delete();
+  showToast('Rutina eliminada');
+}
+
+function renderPaymentBox(s) {
+  const today = new Date();
+  today.setHours(0,0,0,0);
+  let statusColor = '#555', statusText = 'Sin registro de pago', statusEmoji = '⚪';
+
+  if (s.paymentDue) {
+    const due = new Date(s.paymentDue);
+    due.setHours(0,0,0,0);
+    const diffDays = Math.round((due - today) / (1000*60*60*24));
+    if (diffDays < 0) { statusColor = '#FF1744'; statusText = `Vencido hace ${Math.abs(diffDays)} días`; statusEmoji = '🔴'; }
+    else if (diffDays <= 3) { statusColor = '#FFD600'; statusText = `Vence en ${diffDays} días`; statusEmoji = '🟡'; }
+    else { statusColor = '#00E676'; statusText = `Al día — vence el ${due.getDate()}/${due.getMonth()+1}/${due.getFullYear()}`; statusEmoji = '🟢'; }
+  }
+
+  return `
+    <div style="background:#111;border-radius:14px;padding:16px;margin-bottom:14px;border:1px solid #1e1e1e">
+      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:10px">
+        <div class="slbl" style="margin-bottom:0">💳 Pago</div>
+        <span style="font-size:12px;font-weight:700;color:${statusColor}">${statusEmoji} ${statusText}</span>
+      </div>
+      <div style="display:flex;gap:8px;margin-bottom:8px">
+        <div style="flex:1">
+          <label class="flbl">Monto cobrado</label>
+          <input class="inp" id="pay-amount-${s.id}" type="number" placeholder="$ monto" value="${s.paymentAmount||''}" style="margin-bottom:0"/>
+        </div>
+      </div>
+      <button class="btn-sm" style="width:100%" onclick="savePayment('${s.id}')">✓ Registrar pago — vence en 30 días</button>
+    </div>`;
+}
+
+async function savePayment(sid) {
+  const amount = document.getElementById(`pay-amount-${sid}`).value;
+  // Auto calculate next month
+  const today = new Date();
+  const nextDue = new Date(today);
+  nextDue.setDate(nextDue.getDate() + 30);
+  const due = nextDue.toISOString().split('T')[0];
+  const formattedDate = `${nextDue.getDate()}/${nextDue.getMonth()+1}/${nextDue.getFullYear()}`;
+
+  await db.collection('students').doc(sid).update({
+    paymentAmount: amount,
+    paymentDue: due,
+    paymentUpdatedAt: new Date().toISOString()
+  });
+  // Send notification to student
+  await db.collection('students').doc(sid).update({
+    coachMessage: `💳 Pago registrado. Tu próximo vencimiento es el ${formattedDate}. ¡Gracias por confiar en Garde Method!`,
+    coachMessageAt: new Date().toLocaleDateString('es-AR'),
+    coachMessageExpiry: Date.now() + 7*24*60*60*1000
+  });
+  showToast('Pago registrado — próximo vencimiento: ' + formattedDate);
+}
+
+async function saveCoachMessage(sid) {
+  const msg = document.getElementById('coach-msg-input').value.trim();
+  if (!msg) return;
+  const d = new Date();
+  const dateStr = `${d.getDate()}/${d.getMonth()+1}/${d.getFullYear()} ${d.getHours()}:${String(d.getMinutes()).padStart(2,'0')}`;
+  await db.collection('students').doc(sid).update({
+    coachMessage: msg,
+    coachMessageAt: dateStr,
+    coachMessageExpiry: Date.now() + 24*60*60*1000
+  });
+  showToast('Mensaje enviado');
+}
+
+async function clearCoachMessage(sid) {
+  await db.collection('students').doc(sid).update({
+    coachMessage: '',
+    coachMessageAt: '',
+    coachMessageExpiry: 0
+  });
+  showToast('Mensaje borrado');
+}
+
+async function markAtt(sid) {
+  const s = students.find(x => x.id === sid);
+  await db.collection('students').doc(sid).update({
+    attendance: (s.attendance||0) + 1,
+    totalSessions: (s.totalSessions||0) + 1
+  });
+  showToast('Asistencia registrada');
+}
+
+// ── EDIT STUDENT ──────────────────────────────────────────────────────────────
+let editStudentColor = COLORS[0];
+
+const editColorPicker = document.getElementById('edit-color-picker');
+COLORS.forEach(c => {
+  const d = document.createElement('div');
+  d.className = 'cdot';
+  d.style.background = c;
+  d.onclick = () => {
+    editStudentColor = c;
+    document.querySelectorAll('#edit-color-picker .cdot').forEach(x => x.classList.remove('sel'));
+    d.classList.add('sel');
+  };
+  editColorPicker.appendChild(d);
+});
+
+function openEditStudent(sid) {
+  const s = students.find(x => x.id === sid);
+  if (!s) return;
+  document.getElementById('es-name').value = s.name || '';
+  document.getElementById('es-age').value = s.age || '';
+  document.getElementById('es-goal').value = s.goal || '';
+  editStudentColor = s.color || COLORS[0];
+  document.querySelectorAll('#edit-color-picker .cdot').forEach(d => {
+    d.classList.toggle('sel', d.style.background === editStudentColor || d.style.backgroundColor === editStudentColor);
+  });
+  openModal('modal-edit-student');
+}
+
+document.getElementById('save-edit-student-btn').onclick = async () => {
+  const name = document.getElementById('es-name').value.trim();
+  if (!name) { alert('El nombre es obligatorio'); return; }
+  const av = name.split(' ').map(w=>w[0]).join('').slice(0,2).toUpperCase();
+  await db.collection('students').doc(selectedStudentId).update({
+    name,
+    age: document.getElementById('es-age').value,
+    goal: document.getElementById('es-goal').value,
+    color: editStudentColor,
+    avatar: av
+  });
+  closeModal('modal-edit-student');
+  showToast('Datos actualizados');
+};
+
+// ── ADD STUDENT ───────────────────────────────────────────────────────────────
+const colorPicker = document.getElementById('color-picker');
+COLORS.forEach(c => {
+  const d = document.createElement('div');
+  d.className = 'cdot' + (c === selectedColor ? ' sel' : '');
+  d.style.background = c;
+  d.onclick = () => {
+    selectedColor = c;
+    document.querySelectorAll('.cdot').forEach(x => x.classList.remove('sel'));
+    d.classList.add('sel');
+  };
+  colorPicker.appendChild(d);
+});
+
+document.getElementById('save-student-btn').onclick = async () => {
+  const name = document.getElementById('ns-name').value.trim();
+  const email = document.getElementById('ns-email').value.trim();
+  const pass = document.getElementById('ns-pass').value;
+  if (!name || !email || !pass) { alert('Nombre, email y contraseña son obligatorios'); return; }
+  try {
+    const cred = await auth.createUserWithEmailAndPassword(email, pass);
+    // Send verification email
+    await cred.user.sendEmailVerification();
+    const av = name.split(' ').map(w=>w[0]).join('').slice(0,2).toUpperCase();
+    await db.collection('students').doc(cred.user.uid).set({
+      name, age: document.getElementById('ns-age').value,
+      goal: document.getElementById('ns-goal').value,
+      avatar: av, color: selectedColor,
+      attendance: 0, totalSessions: 0, history: [], email,
+      createdAt: new Date().toISOString()
+    });
+    // Sign back in as coach
+    await auth.signInWithEmailAndPassword('maxiprofe1@gmail.com', document.getElementById('coach-pass-stored')?.value || '');
+    closeModal('modal-student');
+    showToast('Alumno agregado — se le envió email de verificación');
+    ['ns-name','ns-age','ns-goal','ns-email','ns-pass'].forEach(id => document.getElementById(id).value = '');
+  } catch(e) { alert('Error: ' + e.message); }
+};
+
+// ── EDIT ROUTINE ──────────────────────────────────────────────────────────────
+let editingRoutineId = null;
+
+function editRoutine(rid) {
+  const r = studentRoutines.find(x => x.id === rid);
+  if (!r) return;
+  editingRoutineId = rid;
+  document.getElementById('nr-day').value = r.day || 'Lunes';
+  document.getElementById('nr-label').value = r.label || '';
+  selectedMuscles = [...(r.muscles || [])];
+  document.querySelectorAll('#muscle-chips .chip').forEach(c => {
+    c.classList.toggle('on', selectedMuscles.includes(c.textContent));
+  });
+  const container = document.getElementById('exercises-container');
+  container.innerHTML = '';
+  (r.exercises || []).forEach(ex => {
+    addExerciseRow();
+    const block = container.lastElementChild;
+    block.querySelector('[name="ex-name"]').value = ex.name || '';
+    block.querySelector('[name="ex-sets"]').value = ex.sets || '4';
+    block.querySelector('[name="ex-reps"]').value = ex.reps || '12';
+    block.querySelector('[name="ex-rest"]').value = ex.rest || '60s';
+    block.querySelector('[name="ex-note"]').value = ex.note || '';
+    block.querySelector('[name="ex-video"]').value = ex.video || '';
+  });
+  document.querySelector('#modal-routine .modal-title').textContent = 'Editar Rutina';
+  document.getElementById('save-routine-btn').textContent = 'Guardar cambios';
+  openModal('modal-routine');
+}
+
+// ── ADD ROUTINE ───────────────────────────────────────────────────────────────
+const muscleChips = document.getElementById('muscle-chips');
+MUSCLES.forEach(m => {
+  const d = document.createElement('div');
+  d.className = 'chip';
+  d.textContent = m;
+  d.onclick = () => {
+    if (selectedMuscles.includes(m)) { selectedMuscles = selectedMuscles.filter(x=>x!==m); d.classList.remove('on'); }
+    else { selectedMuscles.push(m); d.classList.add('on'); }
+  };
+  muscleChips.appendChild(d);
+});
+
+function addExerciseRow() {
+  const c = document.getElementById('exercises-container');
+  const i = c.children.length;
+  const div = document.createElement('div');
+  div.className = 'ex-block';
+  div.innerHTML = `
+    <button class="del-ex" onclick="this.parentElement.remove()">✕</button>
+    <input class="inp" placeholder="Ejercicio ${i+1} *" name="ex-name" style="margin-bottom:6px;padding-right:30px"/>
+    <div class="inp-row" style="margin-bottom:6px">
+      <div><label class="flbl">Series</label><input class="inp" name="ex-sets" value="4" style="margin-bottom:0"/></div>
+      <div><label class="flbl">Reps</label><input class="inp" name="ex-reps" value="12" style="margin-bottom:0"/></div>
+      <div><label class="flbl">Descanso</label><input class="inp" name="ex-rest" value="60s" style="margin-bottom:0"/></div>
+    </div>
+    <input class="inp" placeholder="Nota técnica (opcional)" name="ex-note" style="margin-bottom:6px"/>
+    <label class="flbl">▶ Link de video (YouTube, opcional)</label>
+    <input class="inp" placeholder="https://youtube.com/..." name="ex-video" style="margin-bottom:0"/>`;
+  c.appendChild(div);
+}
+
+function addTabataBlock() {
+  const c = document.getElementById('exercises-container');
+  const div = document.createElement('div');
+  div.className = 'ex-block';
+  div.style.border = '1px solid #FF4D00';
+  div.style.background = 'rgba(255,77,0,0.05)';
+  div.innerHTML = `
+    <button class="del-ex" onclick="this.parentElement.remove()">✕</button>
+    <div style="font-family:'Barlow Condensed',sans-serif;font-weight:900;font-size:13px;color:#FF4D00;letter-spacing:2px;margin-bottom:10px">⚡ BLOQUE TABATA</div>
+    <div class="inp-row" style="margin-bottom:8px">
+      <div><label class="flbl">Trabajo</label><input class="inp" name="tab-work" value="20" style="margin-bottom:0"/> <span style="font-size:10px;color:#555">seg</span></div>
+      <div><label class="flbl">Descanso</label><input class="inp" name="tab-rest" value="10" style="margin-bottom:0"/> <span style="font-size:10px;color:#555">seg</span></div>
+      <div><label class="flbl">Rondas</label><input class="inp" name="tab-rounds" value="8" style="margin-bottom:0"/></div>
+    </div>
+    <label class="flbl">Ejercicios del circuito (uno por línea)</label>
+    <textarea class="inp" name="tab-exercises" placeholder="Burpees&#10;Abdominales&#10;Saltos&#10;Planchas" style="height:80px;resize:none;margin-bottom:0"></textarea>`;
+  div.dataset.type = 'tabata';
+  c.appendChild(div);
+}
+addExerciseRow();
+
+document.getElementById('save-routine-btn').onclick = async () => {
+  const label = document.getElementById('nr-label').value.trim();
+  if (!label) { alert('Poné un nombre a la rutina'); return; }
+  const blocks = document.getElementById('exercises-container').children;
+  const exercises = [];
+  for (const b of blocks) {
+    const name = b.querySelector('[name="ex-name"]').value.trim();
+    if (name) exercises.push({
+      name,
+      sets: b.querySelector('[name="ex-sets"]').value,
+      reps: b.querySelector('[name="ex-reps"]').value,
+      rest: b.querySelector('[name="ex-rest"]').value,
+      note: b.querySelector('[name="ex-note"]').value,
+      video: b.querySelector('[name="ex-video"]').value.trim()
+    });
+  }
+  if (!exercises.length) { alert('Agregá al menos un ejercicio'); return; }
+
+  const data = { day: document.getElementById('nr-day').value, label, muscles: selectedMuscles, exercises };
+
+  // Also save tabata blocks
+  const tabataBlocks = [];
+  for (const b of blocks) {
+    if (b.dataset.type === 'tabata') {
+      const exLines = b.querySelector('[name="tab-exercises"]').value.trim().split('\n').filter(x => x.trim());
+      if (exLines.length) {
+        tabataBlocks.push({
+          type: 'tabata',
+          work: parseInt(b.querySelector('[name="tab-work"]').value) || 20,
+          rest: parseInt(b.querySelector('[name="tab-rest"]').value) || 10,
+          rounds: parseInt(b.querySelector('[name="tab-rounds"]').value) || 8,
+          exercises: exLines
+        });
+      }
+    }
+  }
+  if (tabataBlocks.length) data.tabataBlocks = tabataBlocks;
+
+  if (editingRoutineId) {
+    // Update existing routine
+    await db.collection('students').doc(selectedStudentId).collection('routines').doc(editingRoutineId).update(data);
+    showToast('Rutina actualizada');
+    editingRoutineId = null;
+  } else {
+    // Create new routine
+    await db.collection('students').doc(selectedStudentId).collection('routines').add(data);
+    showToast('Rutina guardada');
+  }
+
+  closeModal('modal-routine');
+  document.getElementById('nr-label').value = '';
+  document.getElementById('exercises-container').innerHTML = '';
+  selectedMuscles = [];
+  document.querySelectorAll('#muscle-chips .chip').forEach(c => c.classList.remove('on'));
+  document.querySelector('#modal-routine .modal-title').textContent = 'Nueva Rutina';
+  document.getElementById('save-routine-btn').textContent = 'Guardar Rutina';
+  addExerciseRow();
+};
+
+// ── ADD WEIGHT ────────────────────────────────────────────────────────────────
+document.getElementById('save-weight-btn').onclick = async () => {
+  const w = document.getElementById('nw-weight').value;
+  if (!w) return;
+  const s = students.find(x => x.id === selectedStudentId);
+  const d = new Date();
+  const entry = { date: `${d.getDate()} ${MONTHS[d.getMonth()]}`, weight: parseFloat(w), note: document.getElementById('nw-note').value };
+  await db.collection('students').doc(selectedStudentId).update({ history: [entry, ...(s.history||[])] });
+  closeModal('modal-weight');
+  showToast('Peso guardado');
+  document.getElementById('nw-weight').value = '';
+  document.getElementById('nw-note').value = '';
+};
+
+// ── UTILS ─────────────────────────────────────────────────────────────────────
+function showPage(id) {
+  document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
+  document.getElementById(id).classList.add('active');
+}
+
+function switchTab(tab) {
+  ['home','students','attendance','banco','detail'].forEach(t => {
+    const el = document.getElementById('tab-'+t);
+    if (el) el.style.display = t === tab ? 'block' : 'none';
+  });
+  document.querySelectorAll('.nb').forEach(b => {
+    b.classList.toggle('on', b.dataset.tab === tab);
+  });
+  document.getElementById('main-nav').style.display = tab === 'detail' ? 'none' : 'flex';
+}
+
+function openModal(id) { document.getElementById(id).classList.add('open'); }
+function closeModal(id) { document.getElementById(id).classList.remove('open'); }
+
+document.getElementById('open-add-student').onclick = () => openModal('modal-student');
+document.getElementById('open-add-banco').onclick = () => openModal('modal-banco');
+
+document.getElementById('back-btn').onclick = () => {
+  if (studentRoutinesUnsub) studentRoutinesUnsub();
+  switchTab('students');
+};
+
+document.querySelectorAll('.modal-bg').forEach(m => {
+  m.onclick = e => { if (e.target === m) m.classList.remove('open'); };
+});
+
+// ── BANCO ─────────────────────────────────────────────────────────────────────
+let bancoRoutines = [];
+
+function listenBanco() {
+  db.collection('banco').orderBy('createdAt', 'desc').onSnapshot(snap => {
+    bancoRoutines = snap.docs.map(d => ({ id: d.id, ...d.data() }));
+    renderBanco();
+  });
+}
+
+function renderBanco() {
+  const el = document.getElementById('banco-list');
+  if (!bancoRoutines.length) {
+    el.innerHTML = '<div class="empty"><div class="empty-icon">📚</div><div style="font-size:14px">Sin rutinas en el banco — agregá la primera</div></div>';
+    return;
+  }
+  el.innerHTML = bancoRoutines.map(r => `
+    <div class="card" style="margin-bottom:8px">
+      <div style="display:flex;align-items:center;gap:10px">
+        <div style="flex:1">
+          <div class="cname" style="font-size:16px">${r.label}</div>
+          <div class="cmeta">${r.muscles?.join(', ') || ''} · ${(r.exercises||[]).length} ejercicios</div>
+        </div>
+        <div style="display:flex;gap:6px;align-items:center">
+          <button onclick="asignarBanco('${r.id}')" style="background:#FF4D00;border:none;color:#fff;border-radius:6px;padding:7px 12px;font-family:'Barlow Condensed',sans-serif;font-weight:800;font-size:11px;letter-spacing:1px;text-transform:uppercase;cursor:pointer">Asignar</button>
+          <button onclick="delBanco('${r.id}')" style="background:none;border:none;color:#444;font-size:14px;cursor:pointer;padding:4px 6px">✕</button>
+        </div>
+      </div>
+    </div>`).join('');
+}
+
+async function delBanco(id) {
+  await db.collection('banco').doc(id).delete();
+  showToast('Rutina eliminada del banco');
+}
+
+function asignarBanco(bancoId) {
+  const r = bancoRoutines.find(x => x.id === bancoId);
+  if (!r) return;
+  // Show student picker
+  const names = students.map((s,i) => `<button onclick="confirmarAsignar('${bancoId}','${s.id}')" style="width:100%;text-align:left;background:#1a1a1a;border:1px solid #1e1e1e;border-radius:10px;padding:12px 14px;color:#f0f0f0;font-family:'Barlow Condensed',sans-serif;font-weight:800;font-size:16px;text-transform:uppercase;cursor:pointer;margin-bottom:6px">${s.name}</button>`).join('');
+  document.getElementById('asignar-content').innerHTML = `
+    <div class="modal-title">Asignar a...</div>
+    <div style="font-size:13px;color:#555;margin-bottom:14px">Rutina: <b style="color:#f0f0f0">${r.label}</b></div>
+    <label class="flbl">Día</label>
+    <select class="inp" id="asignar-day">
+      <option>Lunes</option><option>Martes</option><option>Miércoles</option>
+      <option>Jueves</option><option>Viernes</option><option>Sábado</option><option>Domingo</option>
+    </select>
+    <label class="flbl">Alumno</label>
+    ${names}
+    <button class="btn-dark" onclick="closeModal('modal-asignar')" style="margin-top:8px">Cancelar</button>`;
+  openModal('modal-asignar');
+}
+
+async function confirmarAsignar(bancoId, studentId) {
+  const r = bancoRoutines.find(x => x.id === bancoId);
+  const day = document.getElementById('asignar-day').value;
+  await db.collection('students').doc(studentId).collection('routines').add({
+    day, label: r.label, muscles: r.muscles || [], exercises: r.exercises || [],
+    createdAt: new Date().toISOString()
+  });
+  closeModal('modal-asignar');
+  showToast('Rutina asignada al alumno');
+}
+
+// ── ADD BANCO ROUTINE ─────────────────────────────────────────────────────────
+const bancoBtnMuscles = document.getElementById('banco-muscle-chips');
+let bancoMuscles = [];
+const MUSCLES2 = ["Pecho","Espalda","Hombros","Bíceps","Tríceps","Piernas","Glúteos","Core","Cardio"];
+MUSCLES2.forEach(m => {
+  const d = document.createElement('div');
+  d.className = 'chip';
+  d.textContent = m;
+  d.onclick = () => {
+    if (bancoMuscles.includes(m)) { bancoMuscles = bancoMuscles.filter(x=>x!==m); d.classList.remove('on'); }
+    else { bancoMuscles.push(m); d.classList.add('on'); }
+  };
+  bancoBtnMuscles.appendChild(d);
+});
+
+function addBancoExRow() {
+  const c = document.getElementById('banco-exercises');
+  const i = c.children.length;
+  const div = document.createElement('div');
+  div.className = 'ex-block';
+  div.innerHTML = `
+    <button class="del-ex" onclick="this.parentElement.remove()">✕</button>
+    <input class="inp" placeholder="Ejercicio ${i+1} *" name="bex-name" style="margin-bottom:6px;padding-right:30px"/>
+    <div class="inp-row" style="margin-bottom:6px">
+      <div><label class="flbl">Series</label><input class="inp" name="bex-sets" value="4" style="margin-bottom:0"/></div>
+      <div><label class="flbl">Reps</label><input class="inp" name="bex-reps" value="12" style="margin-bottom:0"/></div>
+      <div><label class="flbl">Descanso</label><input class="inp" name="bex-rest" value="60s" style="margin-bottom:0"/></div>
+    </div>
+    <input class="inp" placeholder="Nota técnica (opcional)" name="bex-note" style="margin-bottom:6px"/>
+    <label class="flbl">▶ Link de video (opcional)</label>
+    <input class="inp" placeholder="https://youtube.com/..." name="bex-video" style="margin-bottom:0"/>`;
+  c.appendChild(div);
+}
+addBancoExRow();
+
+document.getElementById('save-banco-btn').onclick = async () => {
+  const label = document.getElementById('banco-label').value.trim();
+  if (!label) { alert('Poné un nombre a la rutina'); return; }
+  const blocks = document.getElementById('banco-exercises').children;
+  const exercises = [];
+  for (const b of blocks) {
+    const name = b.querySelector('[name="bex-name"]').value.trim();
+    if (name) exercises.push({
+      name,
+      sets: b.querySelector('[name="bex-sets"]').value,
+      reps: b.querySelector('[name="bex-reps"]').value,
+      rest: b.querySelector('[name="bex-rest"]').value,
+      note: b.querySelector('[name="bex-note"]').value,
+      video: b.querySelector('[name="bex-video"]').value.trim()
+    });
+  }
+  if (!exercises.length) { alert('Agregá al menos un ejercicio'); return; }
+  await db.collection('banco').add({
+    label, muscles: bancoMuscles, exercises,
+    createdAt: new Date().toISOString()
+  });
+  closeModal('modal-banco');
+  showToast('Rutina agregada al banco');
+  document.getElementById('banco-label').value = '';
+  document.getElementById('banco-exercises').innerHTML = '';
+  bancoMuscles = [];
+  document.querySelectorAll('#banco-muscle-chips .chip').forEach(c => c.classList.remove('on'));
+  addBancoExRow();
+};
+
+let toastTimer;
+function showToast(msg) {
+  const t = document.getElementById('toast');
+  t.textContent = msg;
+  t.style.display = 'block';
+  clearTimeout(toastTimer);
+  toastTimer = setTimeout(() => t.style.display = 'none', 2500);
+}
+
+async function exportExcel() {
+  if (!students.length) { showToast('No hay alumnos para exportar'); return; }
+  showToast('Cargando datos...');
+
+  // Build table HTML
+  let html = `
+    <div class="modal-title">📊 Resumen de Alumnos</div>
+    <div style="font-size:11px;color:#555;margin-bottom:16px">${new Date().toLocaleDateString('es-AR')}</div>`;
+
+  // Students summary
+  html += `<div class="slbl" style="margin-bottom:10px">Alumnos y Asistencias</div>`;
+  html += `<div style="overflow-x:auto">
+    <table style="width:100%;border-collapse:collapse;font-size:12px">
+      <tr style="background:#1a1a1a">
+        <th style="padding:8px;text-align:left;color:#555;font-weight:600;border-bottom:1px solid #2a2a2a">Nombre</th>
+        <th style="padding:8px;text-align:center;color:#555;font-weight:600;border-bottom:1px solid #2a2a2a">Asist.</th>
+        <th style="padding:8px;text-align:center;color:#555;font-weight:600;border-bottom:1px solid #2a2a2a">%</th>
+        <th style="padding:8px;text-align:left;color:#555;font-weight:600;border-bottom:1px solid #2a2a2a">Objetivo</th>
+      </tr>`;
+
+  for (const s of students) {
+    const p = s.totalSessions > 0 ? Math.round((s.attendance||0)/s.totalSessions*100) : 0;
+    html += `<tr style="border-bottom:1px solid #1e1e1e">
+      <td style="padding:8px;color:#f0f0f0;font-weight:600">${s.name}</td>
+      <td style="padding:8px;text-align:center;color:#FF4D00;font-weight:700">${s.attendance||0}</td>
+      <td style="padding:8px;text-align:center;color:#f0f0f0">${p}%</td>
+      <td style="padding:8px;color:#555">${s.goal||'-'}</td>
+    </tr>`;
+  }
+  html += `</table></div>`;
+
+  // Weight history
+  html += `<div class="divider"></div>
+    <div class="slbl" style="margin-bottom:10px">Últimos Pesos Registrados</div>`;
+
+  let hasPeso = false;
+  for (const s of students) {
+    const history = s.history || [];
+    if (history.length) {
+      hasPeso = true;
+      html += `<div style="font-size:11px;font-weight:700;color:#FF4D00;margin-bottom:4px;text-transform:uppercase;letter-spacing:1px">${s.name}</div>`;
+      history.slice(0,3).forEach(h => {
+        html += `<div style="display:flex;justify-content:space-between;padding:5px 0;border-bottom:1px solid #1e1e1e;font-size:12px">
+          <span style="color:#555">${h.date}</span>
+          <span style="color:#f0f0f0;font-weight:600">${h.weight} kg</span>
+          ${h.note ? `<span style="color:#555">${h.note}</span>` : ''}
+        </div>`;
+      });
+      html += `<div style="margin-bottom:10px"></div>`;
+    }
+  }
+  if (!hasPeso) html += `<div style="color:#555;font-size:12px">Sin registros de peso aún</div>`;
+
+  // Routines count
+  html += `<div class="divider"></div>
+    <div class="slbl" style="margin-bottom:10px">Rutinas Activas</div>`;
+
+  for (const s of students) {
+    try {
+      const snap = await db.collection('students').doc(s.id).collection('routines')
+        .where('status', '!=', 'archived').get();
+      html += `<div style="display:flex;justify-content:space-between;padding:7px 0;border-bottom:1px solid #1e1e1e;font-size:12px">
+        <span style="color:#f0f0f0;font-weight:600">${s.name}</span>
+        <span style="color:#FF4D00;font-weight:700">${snap.size} rutinas</span>
+      </div>`;
+    } catch(e) {}
+  }
+
+  html += `<button class="btn-dark" onclick="closeModal('modal-export')" style="margin-top:20px">Cerrar</button>`;
+
+  document.getElementById('export-content').innerHTML = html;
+  openModal('modal-export');
+  showToast('');
+}
+
+</script>
+</body>
+</html>
